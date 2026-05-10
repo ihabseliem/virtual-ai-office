@@ -503,9 +503,10 @@
         <div class="panel">
           <h2>n8n Webhook Integration</h2>
           <p class="small">Später trägt man hier die n8n Webhook URL ein.</p>
-          <input placeholder="https://dein-n8n/webhook/..." />
+         <input id="webhookUrl" placeholder="https://dein-n8n/webhook/..." />
           <br><br>
-          <button style="width:100%;box-shadow:none;">Webhook speichern</button>
+         <button onclick="saveWebhook()" style="width:100%;box-shadow:none;">Webhook speichern</button>
+<p id="webhookStatus" class="small" style="margin-top:10px;"></p>
         </div>
       </aside>
     </main>
@@ -582,6 +583,35 @@
       document.getElementById("step-done").classList.add("done");
       log("✅ Fertig: E-Mail gesendet und Google Doc archiviert.");
     }
+    function saveWebhook() {
+  const input = document.getElementById("webhookUrl");
+  const status = document.getElementById("webhookStatus");
+  const url = input.value.trim();
+
+  if (!url) {
+    status.textContent = "Bitte zuerst eine n8n Webhook URL einfügen.";
+    status.style.color = "#f97316";
+    return;
+  }
+
+  localStorage.setItem("n8nWebhookUrl", url);
+  status.textContent = "Webhook URL gespeichert.";
+  status.style.color = "#22c55e";
+}
+
+function loadWebhook() {
+  const savedUrl = localStorage.getItem("n8nWebhookUrl");
+  const input = document.getElementById("webhookUrl");
+  const status = document.getElementById("webhookStatus");
+
+  if (savedUrl && input) {
+    input.value = savedUrl;
+    status.textContent = "Gespeicherte Webhook URL geladen.";
+    status.style.color = "#94a3b8";
+  }
+}
+
+window.addEventListener("load", loadWebhook);
   </script>
 </body>
 </html>
