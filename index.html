@@ -477,7 +477,7 @@
       <aside class="side">
         <div class="panel">
           <h2>Meeting Input</h2>
-          <p class="small">Hier kann später ein Transkript an den n8n-Webhook gesendet werden.</p>
+          <p class="small">Hier kann ein Transkript an den n8n-Webhook gesendet werden.</p>
           <textarea id="transcript" rows="7">Im heutigen Meeting haben Sarah und Michael beschlossen, dass der neue Onboarding-Prozess bis Freitag getestet wird. Sarah übernimmt die Dokumentation. Michael prüft die technische Umsetzung. Offen bleibt, welche Vorlage für neue Mitarbeitende genutzt wird.</textarea>
         </div>
 
@@ -502,18 +502,17 @@
 
         <div class="panel">
           <h2>n8n Webhook Integration</h2>
-          <p class="small">Später trägt man hier die n8n Webhook URL ein.</p>
-         <input id="webhookUrl" placeholder="https://dein-n8n/webhook/..." />
+          <p class="small">Trage hier deine n8n Webhook URL ein.</p>
+          <input id="webhookUrl" placeholder="https://dein-n8n/webhook/..." />
           <br><br>
-         <button onclick="saveWebhook()" style="width:100%;box-shadow:none;">Webhook speichern</button>
-<p id="webhookStatus" class="small" style="margin-top:10px;"></p>
+          <button onclick="saveWebhook()" style="width:100%;box-shadow:none;">Webhook speichern</button>
+          <p id="webhookStatus" class="small" style="margin-top:10px;"></p>
         </div>
       </aside>
     </main>
   </div>
 
   <script>
-    const agents = ["office", "meeting", "mail", "archive"];
     const positions = {
       office: { left: "150px", top: "110px" },
       meeting: { left: "470px", top: "110px" },
@@ -575,6 +574,30 @@
       resetStates();
       document.getElementById("log").innerHTML = "Workflow gestartet: Neues Meeting-Transkript eingegangen.";
 
+      const webhookUrl = localStorage.getItem("n8nWebhookUrl");
+      const transcript = document.getElementById("transcript").value;
+
+      if (webhookUrl) {
+        log("🌐 n8n Webhook wird aufgerufen...");
+
+        fetch(webhookUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            transcript: transcript,
+            source: "Virtual AI Office",
+            timestamp: new Date().toISOString()
+          })
+        });
+
+        log("📨 Anfrage an n8n gesendet.");
+      } else {
+        log("⚠️ Kein Webhook gespeichert. Es läuft nur die Simulation.");
+      }
+
       await activate("office", "office", "Office Manager nimmt das Transkript entgegen");
       await activate("meeting", "meeting", "Meeting Agent analysiert das Transkript");
       await activate("mail", "mail", "E-Mail Agent versendet das Follow-up");
@@ -583,35 +606,36 @@
       document.getElementById("step-done").classList.add("done");
       log("✅ Fertig: E-Mail gesendet und Google Doc archiviert.");
     }
+
     function saveWebhook() {
-  const input = document.getElementById("webhookUrl");
-  const status = document.getElementById("webhookStatus");
-  const url = input.value.trim();
+      const input = document.getElementById("webhookUrl");
+      const status = document.getElementById("webhookStatus");
+      const url = input.value.trim();
 
-  if (!url) {
-    status.textContent = "Bitte zuerst eine n8n Webhook URL einfügen.";
-    status.style.color = "#f97316";
-    return;
-  }
+      if (!url) {
+        status.textContent = "Bitte zuerst eine n8n Webhook URL einfügen.";
+        status.style.color = "#f97316";
+        return;
+      }
 
-  localStorage.setItem("n8nWebhookUrl", url);
-  status.textContent = "Webhook URL gespeichert.";
-  status.style.color = "#22c55e";
-}
+      localStorage.setItem("n8nWebhookUrl", url);
+      status.textContent = "Webhook URL gespeichert.";
+      status.style.color = "#22c55e";
+    }
 
-function loadWebhook() {
-  const savedUrl = localStorage.getItem("n8nWebhookUrl");
-  const input = document.getElementById("webhookUrl");
-  const status = document.getElementById("webhookStatus");
+    function loadWebhook() {
+      const savedUrl = localStorage.getItem("n8nWebhookUrl");
+      const input = document.getElementById("webhookUrl");
+      const status = document.getElementById("webhookStatus");
 
-  if (savedUrl && input) {
-    input.value = savedUrl;
-    status.textContent = "Gespeicherte Webhook URL geladen.";
-    status.style.color = "#94a3b8";
-  }
-}
+      if (savedUrl && input) {
+        input.value = savedUrl;
+        status.textContent = "Gespeicherte Webhook URL geladen.";
+        status.style.color = "#94a3b8";
+      }
+    }
 
-window.addEventListener("load", loadWebhook);
+    window.addEventListener("load", loadWebhook);
   </script>
 </body>
 </html>
